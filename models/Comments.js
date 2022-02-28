@@ -1,5 +1,7 @@
 const mongoose =  require('mongoose');
 const {Schema} = mongoose;
+const deepPopulate = require('mongoose-deep-populate')(mongoose);
+
 
 const CommentSchema = new mongoose.Schema({
      text: {
@@ -19,5 +21,5 @@ const CommentSchema = new mongoose.Schema({
 }, {
      timestamps: true
 });
-
+CommentSchema.plugin(deepPopulate);
 module.exports = mongoose.model('Comment',CommentSchema);

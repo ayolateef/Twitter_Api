@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-
+ const deepPopulate = require('mongoose-deep-populate')(mongoose);
+const {Schema} = mongoose;
 const UserSchema = new mongoose.Schema({
      first_name:{
           type: String,
@@ -20,8 +21,25 @@ const UserSchema = new mongoose.Schema({
           type: String,
           required:[true, 'Please password is required' ]
      },
+     followersCount: { type: Number, default: 0 },
+     followingCount: { type: Number, default: 0 },
+     following: [
+          { 
+              type: Schema.ObjectId, 
+              ref: 'User' 
+          },
+     ],
+          followers: [
+               { 
+                   type: Schema.ObjectId, 
+                   ref: 'User' 
+               }
+           ],
 
-}, {
+},
+{
      timestamps: true
 });
+
+UserSchema.plugin(deepPopulate);
 module.exports = mongoose.model('User', UserSchema);

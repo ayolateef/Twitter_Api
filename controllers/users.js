@@ -1,6 +1,8 @@
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
 const User = require("../models/Users");
+const Tweet = require("../models/Tweets");
+const Comment = require("../models/Comments");
 const { validateUser } = require("../validations/user");
 
 /**
@@ -16,13 +18,16 @@ exports.getUsers = asyncHandler(async (req, res, next) => {
  * Get a single user
  */
 exports.getUser = asyncHandler(async (req, res, next) => {
-  const user = await User.findById(req.params.id).populate("tweets");
+  const user = await User.findById(req.params.id);
+
+  const comment = await Comment.find({ userId: user._id });
+
   if (!user) {
     return next(
       new ErrorResponse(`User with id of ${req.params.id} not found`, 404)
     );
   }
-  return res.status(200).json({ success: true, data: user });
+  return res.status(200).json({ success: true, data: { user, comment } });
 });
 
 /**
@@ -37,13 +42,81 @@ exports.createUser = asyncHandler(async (req, res, next) => {
       .send({ success: false, message: error.details[0].message });
   const { first_name, last_name, email, password } = req.body;
 
-
   const user = await User.create({
-     first_name,
+    first_name,
     last_name,
     email,
-    password
+    password,
   });
-  console.log('user created', user)
-  return res.status(201).json({ success: true, data: user});
+  console.log("user created", user);
+  return res.status(201).json({ success: true, data: user });
+});
+
+/**
+ * a user should follow another user
+ */
+exports.followUser = asyncHandler(async (req, res, next) => {
+  // make sure the user exists
+  const user = await User.findById(req.params.id);
+
+  if (!user) {
+    return next(
+      new ErrorResponse(`User with id of ${req.params.id} not found`, 404)
+    );
+  }
+
+  let followedUser = await User.findByIdAndUpdate(
+    req.params.id,
+    {
+      $push: { followers: req.params.id },
+      $inc: { followersCount: 1 },
+    },
+    { new: true } 
+  );
+  let followingUser = await User.findByIdAndUpdate(
+    req.body._id,
+    {
+      $push: { following: req.body._id },
+      $inc: { followingCount: 1 },
+    },
+    { new: true }
+  );
+
+  return res
+    .status(200)
+    .json({ success: true, data: { followedUser, followingUser } });
+});
+
+/**
+ * a user should unfollow another user
+ */
+exports.unfollowUser = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+
+  if (!user) {
+    return next(
+      new ErrorResponse(`User with id of ${req.params.id} not found`, 404)
+    );
+  }
+
+  let unfollowedUser = await User.findByIdAndUpdate(
+    req.params.id,
+    {
+      $pull: { followers: req.params.id },
+      $inc: { followersCount: -1 },
+    },
+    { new: true }
+  );
+  let unfollowingUser = await User.findByIdAndUpdate(
+    req.body._id,
+    {
+      $pull: { following: req.body._id },
+      $inc: { followingCount: -1 },
+    },
+    { new: true }
+  );
+
+  return res
+    .status(200)
+    .json({ success: true, data: { unfollowedUser, unfollowingUser } });
 });
