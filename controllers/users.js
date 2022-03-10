@@ -41,7 +41,6 @@ exports.createUser = asyncHandler(async (req, res, next) => {
       .status(400)
       .send({ success: false, message: error.details[0].message });
   const { first_name, last_name, email, password } = req.body;
-
   const user = await User.create({
     first_name,
     last_name,
@@ -65,18 +64,31 @@ exports.followUser = asyncHandler(async (req, res, next) => {
     );
   }
 
+  const { id } = req.body;
+  const isIdExist = user.followers.includes(id);
+
+  if (isIdExist) {
+    return next(
+      new ErrorResponse(
+        `User with id of ${req.params.id} already been followed`,
+        404
+      )
+    );
+  }
+
   let followedUser = await User.findByIdAndUpdate(
     req.params.id,
     {
-      $push: { followers: req.params.id },
+      $push: { followers: id },
       $inc: { followersCount: 1 },
     },
-    { new: true } 
+    { new: true }
   );
+
   let followingUser = await User.findByIdAndUpdate(
-    req.body._id,
+    id,
     {
-      $push: { following: req.body._id },
+      $push: { following: req.params.id },
       $inc: { followingCount: 1 },
     },
     { new: true }
@@ -99,18 +111,30 @@ exports.unfollowUser = asyncHandler(async (req, res, next) => {
     );
   }
 
+  const { id } = req.body;
+  const isIdExist = user.followers.includes(id);
+
+  if (!isIdExist) {
+    return next(
+      new ErrorResponse(
+        `User with id of ${req.params.id} already been unfollowed`,
+        404
+      )
+    );
+  }
+
   let unfollowedUser = await User.findByIdAndUpdate(
     req.params.id,
     {
-      $pull: { followers: req.params.id },
+      $pull: { followers: id },
       $inc: { followersCount: -1 },
     },
     { new: true }
   );
   let unfollowingUser = await User.findByIdAndUpdate(
-    req.body._id,
+    id,
     {
-      $pull: { following: req.body._id },
+      $pull: { following: req.params.id },
       $inc: { followingCount: -1 },
     },
     { new: true }
