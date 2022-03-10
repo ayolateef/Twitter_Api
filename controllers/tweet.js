@@ -39,7 +39,7 @@ exports.getTweets = asyncHandler(async (req, res, next) => {
  */
 
 exports.createComment = asyncHandler(async (req, res, next) => {
-  const { error } = validateComment (req.body);
+  const { error } = validateComment(req.body);
   if (error)
     return res
       .status(400)
@@ -47,18 +47,18 @@ exports.createComment = asyncHandler(async (req, res, next) => {
 
   // create comment
   const { userId, text, tweetId } = req.body;
-  if(!tweetId){
+  if (!tweetId) {
     return next(
       new ErrorResponse(`TweetId not found with id of ${req.params.id}`, 404)
     );
   }
-    //find the tweet to comment on
-    const postedTweet = await Tweet.findOne({ _id: req.params.id });
+  //find the tweet to comment on
+  const postedTweet = await Tweet.findOne({ _id: req.params.tweetId });
 
   const comment = await Comment.create({
     userId,
     text,
-    tweetId:postedTweet._id
+    tweetId: postedTweet._id,
   });
   // then push the comment to the tweet
   return res.status(401).send({ success: true, data: comment });
@@ -68,13 +68,13 @@ exports.createComment = asyncHandler(async (req, res, next) => {
  * Get a tweet with all its comments
  */
 exports.postTweet = asyncHandler(async (req, res, next) => {
-   const tweet = await Tweet.findById(req.params.id);
+  const tweet = await Tweet.findById(req.params.id);
 
   //  const user = await User.findById(req.params.id);
 
-  const comments = await Comment.find({ 
-     tweetId: tweet._id
-  }).deepPopulate('user._id')
+  const comments = await Comment.find({
+    tweetId: tweet._id,
+  }).deepPopulate("user._id");
 
   // find a user comments in a tweet
   // commment.find(tweetId and userId and text)
@@ -84,8 +84,7 @@ exports.postTweet = asyncHandler(async (req, res, next) => {
       new ErrorResponse(`Tweet not found with id of ${req.params.id}`, 404)
     );
   }
-  return res.status(200).json({ success: true, data: {tweet, comments}
-  });
+  return res.status(200).json({ success: true, data: { tweet, comments } });
 });
 
 /**
@@ -95,7 +94,7 @@ exports.postTweet = asyncHandler(async (req, res, next) => {
 exports.updateTweet = asyncHandler(async (req, res, next) => {
   const tweet = await Tweet.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
-    runValidators: true, 
+    runValidators: true,
   });
   if (!tweet) {
     return next(

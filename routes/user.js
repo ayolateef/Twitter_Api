@@ -1,13 +1,20 @@
-const express = require('express');
-const router = express.Router()
+const express = require("express");
+const router = express.Router();
 
-const {createUser,followUser,unfollowUser, getUsers, getUser } = require('../controllers/users');
+const { protect } = require("../middleware/auth");
 
-router.post('/', createUser);
-router.put('/:id/follow', followUser);
-router.put('/:id/unfollow', unfollowUser);
-router.route('/').get(getUsers);
-router.route('/:id').get(getUser);
+const {
+  createUser,
+  followUser,
+  unfollowUser,
+  getUsers,
+  getUser,
+} = require("../controllers/users");
 
+router.post("/", createUser);
+router.put("/:id/follow", protect, followUser);
+router.put("/:id/unfollow", protect, unfollowUser);
+router.get("/", getUsers);
+router.get("/:id", protect, getUser);
 
 module.exports = router;
