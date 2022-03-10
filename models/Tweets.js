@@ -1,5 +1,6 @@
  const mongoose = require('mongoose');
  const {Schema} = mongoose;
+ const deepPopulate = require('mongoose-deep-populate')(mongoose);
 
 const TweetSchema = new mongoose.Schema({
     userId: {
@@ -7,16 +8,14 @@ const TweetSchema = new mongoose.Schema({
          ref: 'User',
          required: true
     },
-    comments: [{
-     type:Schema.Types.ObjectId,
-     ref: 'Comments',
-     required: 'true'
-    }],
     tweet: {
          type: String
     }
 
+
 }, {
      timestamps: true
 });
+
+TweetSchema.plugin(deepPopulate);
 module.exports = mongoose.model('Tweet', TweetSchema);

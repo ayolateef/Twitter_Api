@@ -20,8 +20,8 @@ app.use(express.json());
 app.use(logger);
 
 //mount the router
-app.use('api/v1/tweeps', users)
-app.use('api/v1/tweets', tweets)
+app.use('/api/v1/tweeps', users)
+app.use('/api/v1/tweets', tweets)
 
 app.use(errorHandler);
 
